@@ -1,24 +1,26 @@
 package dubbo.rest.external;
 
+import com.alibaba.fastjson.JSON;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dubbo.rest.component.GenericInvoke;
-import org.apache.dubbo.config.ReferenceConfig;
-import org.apache.dubbo.config.utils.ReferenceConfigCache;
-import org.apache.dubbo.metadata.definition.model.ServiceDefinition;
+import dubbo.rest.dto.Req;
 import org.apache.dubbo.metadata.report.MetadataReport;
 import org.apache.dubbo.metadata.report.MetadataReportInstance;
 import org.apache.dubbo.metadata.report.identifier.MetadataIdentifier;
-import org.apache.dubbo.rpc.service.GenericService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,7 +37,9 @@ public class Handler {
     @Autowired
     GenericInvoke genericInvoke;
 
-    public Mono<ServerResponse> hello(ServerRequest request){
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    public Mono<ServerResponse> exec(ServerRequest request){
         Mono<String> bodyStr = request.bodyToMono(String.class);
         return ServerResponse.ok()
                 .contentType(MediaType.APPLICATION_JSON)
@@ -45,70 +49,56 @@ public class Handler {
                     String interfaceName = request.pathVariable("service");
                     String group = request.queryParam("group").orElse("");
                     String version = request.queryParam("version").orElse("");
-                    Object genericInvokeResult =
-                            genericInvoke.genericCall(
-                                    interfaceName, group, version,
-                                    "sayHello",
-                                    new String[] { String.class.getName() },
-                                    new Object[] { "name" });
+//                    String methodName = "sayHello";
 
-                    System.out.println(">>:"+genericInvokeResult);
-                    return String.valueOf(genericInvokeResult);
+                    Req req = JSON.parseObject(body, Req.class);
+
+                    MetadataReport metadataReport = MetadataReportInstance.getMetadataReport();
+                    String serviceDefinition = metadataReport.getServiceDefinition(
+                            new MetadataIdentifier(
+                                    interfaceName,
+                                    version,
+                                    group,
+                                    PROVIDER_SIDE,
+                                    application)
+                    );
+                    List<String> parameterTypes = Optional.ofNullable(serviceDefinition)
+                    .map(sdStr-> {
+                        try {
+                            return mapper.readTree(sdStr);
+                        } catch (JsonProcessingException e) {
+                            return null;
+                        }
+                    })
+                    .map(sdJson->sdJson.get("methods"))
+                    .map(methods->{
+                        for(JsonNode md:methods){
+                            if(req.getMethodName().equals(Optional.ofNullable(md.get("name")).map(n->n.textValue()).orElse(""))){
+                                return md;
+                            }
+                        }
+                        return null;
+                    })
+                    .map(md->md.get("parameterTypes"))
+                    .map(pts->{
+                        List<String> xparameterTypes = new ArrayList<>();
+                        for(JsonNode pt:pts){
+                            pt.textValue();
+                            xparameterTypes.add(pt.textValue());
+                        }
+                        return xparameterTypes;
+                    }).orElse(new ArrayList<>());
+                        Object genericInvokeResult =
+                                genericInvoke.genericCall(
+                                        interfaceName, group, version,
+                                        req.getMethodName(),
+                                        parameterTypes.toArray(new String[]{}),
+                                        req.getParamValues());
+                        System.out.println(">>:"+genericInvokeResult);
+                        return String.valueOf(genericInvokeResult);
+
                 }),
                 String.class));
 //        return ServerResponse.ok().build(bodyStr.thenEmpty(Mono.empty()));
-    }
-    public Mono<ServerResponse> hello3(ServerRequest request) {
-        Mono<String> bodyStr = request.bodyToMono(String.class);
-        return ServerResponse.ok()
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .body(BodyInserters
-                                        .fromValue(
-//                                String.format("Hi, %s!",request.pathVariable("name"))
-                                                Optional.ofNullable("").map(x->{
-                                                    String application = request.pathVariable("application");
-                                                    String interfaceName = request.pathVariable("service");
-                                                    String group = request.queryParam("group").orElse("dubbo");
-                                                    String version = request.queryParam("version").orElse("1.0.0");
-
-//                                                    ReferenceConfig<GenericService> reference = new ReferenceConfig<>();
-//                                                    reference.setInterface(interfaceName);
-//                                                    reference.setVersion(version);
-//                                                    reference.setGeneric("true");
-
-                                                    MetadataReport metadataReport = MetadataReportInstance.getMetadataReport();
-                                                    String serviceDefinition = metadataReport.getServiceDefinition(
-                                                            new MetadataIdentifier(
-                                                                    interfaceName,
-                                                                    version,
-                                                                    group,
-                                                                    PROVIDER_SIDE,
-                                                                    application)
-                                                    );
-
-//                                                    String body = request
-//                                                            .body(BodyExtractors.toMono(String.class)).thenReturn("").block();
-//                                                    logger.info("body {}", body);
-//                                            .blockOptional();
-//                                    GenericService genericService = ReferenceConfigCache
-//                                            .getCache()
-//                                            .get(reference);
-                                                    Object genericInvokeResult =
-//                                            genericService
-//                                            .$invoke(
-//                                                    "sayHello",
-//                                                    new String[] { String.class.getName() },
-//                                                    new Object[] { "dubbo generic invoke" });
-                                                            genericInvoke.genericCall(
-                                                                    interfaceName,group, version,"sayHello",
-                                                                    new String[] { String.class.getName() },
-                                                                    new Object[] { "dubbo generic invoke" });
-                                                    System.out.println(">>:"+genericInvokeResult);
-                                                    return genericInvokeResult;
-                                                })
-                                        )
-                        );
-
-
     }
 }
