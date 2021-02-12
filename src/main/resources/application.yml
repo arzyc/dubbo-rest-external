@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: dubbo-rest-external
+#  cloud:
+#    zookeeper:
+#      connect-string: 192.168.1.4:2181
+server:
+  port: 8182
+dubbo:
+  registry:
+    address: zookeeper://127.0.0.1:2181
+    #consul://127.0.0.1:8500
+  metadata-report:
+    address: zookeeper://127.0.0.1:2181
+#server:
+#  port: 8443
+#  ssl:
+#    key-store: ${key-store:./dest.jks}
+#    key-store-password: ${key-store-password:123456}
+#    key-password: ${key-password:123456}
+#logging:
+#  level:
+#    org.apache.avro.ipc.netty: DEBUG
+#    org.apache.hc: INFO
+#logging:
+#  level: INFO
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+#        include: prometheus,info
+  metrics:
+    tags:
+      application: ${spring.application.name}
+#debug: true
