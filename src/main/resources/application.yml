@@ -8,10 +8,11 @@ server:
   port: 8182
 dubbo:
   registry:
-    address: zookeeper://127.0.0.1:2181
-    #consul://127.0.0.1:8500
+#    address: zookeeper://127.0.0.1:2181
+    address: consul://127.0.0.1:8500
   metadata-report:
-    address: zookeeper://127.0.0.1:2181
+#    address: zookeeper://127.0.0.1:2181
+    address: consul://127.0.0.1:8500
 #server:
 #  port: 8443
 #  ssl:

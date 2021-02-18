@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GenericInvoke {
 
     @Autowired
-    private DubboBootstrap dubboBootstrap;
+    DubboBootstrap dubboBootstrap;
 
     //TODO change Cache impl
     private ConcurrentHashMap<String, ReferenceConfig<GenericService>> cachedConfig = new ConcurrentHashMap<>();
@@ -34,17 +34,20 @@ public class GenericInvoke {
                     .getCache()
                     .get(reference);
 //            reference.get();
-            logger.info("dubbo generic invoke, service is {}, method is {} , paramTypes is {} , paramObjs is {} , svc" +
-                            " is {}.", interfaceName
-                    , methodName,paramTypes,paramObjs,svc);
+            logger.info("dubbo generic invoke, service is {}, method is {} , paramTypes is {} , paramObjs is {} , svc is {}.",
+                    interfaceName, methodName, paramTypes, paramObjs, svc);
             return svc.$invoke(methodName, paramTypes, paramObjs);
         } catch (Exception e) {
             logger.error("Generic invoke failed",e);
             if (e instanceof RpcException) {
                 RpcException e1 = (RpcException)e;
-                return e1.getCode();
+                RpcStatus rpcStatus = RpcStatus.resolve(e1.getCode());
+                return new RpcError(rpcStatus);
             }
-            throw e;
+
+            RpcError rpcError = new RpcError(-1, e);
+            return rpcError;
+//            throw e;
         }
     }
 
@@ -73,6 +76,7 @@ public class GenericInvoke {
         reference.setBootstrap(dubboBootstrap);
         reference.setGroup(group);
         reference.setVersion(version);
+        reference.setLoadbalance("roundrobin");
         reference.setInterface(interfaceName);
         return reference;
     }
