@@ -1,5 +1,7 @@
 dubbo-rest-external
 
+dubbo服务转化成rest服务
+
 http->dubbo-rest-external->dubbo-rpc
 
 请求uri格式
