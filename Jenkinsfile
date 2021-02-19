@@ -16,7 +16,7 @@ pipeline {
         stage('package') {
             agent { docker 'maven:3.6.3-jdk-11' }
             steps {
-                echo 'mvn package'
+                sh 'mvn package'
             }
         }
         stage('Deploy') {
