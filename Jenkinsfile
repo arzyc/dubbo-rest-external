@@ -3,7 +3,7 @@ pipeline {
 
     stages {
         stage('Build') {
-            agent { docker 'maven:3.6.3-jdk-11' }
+            agent { podman 'maven:3.6.3-jdk-11' }
             steps {
                 sh 'mvn clean compile'
             }
@@ -14,7 +14,7 @@ pipeline {
             }
         }
         stage('package') {
-            agent { docker 'maven:3.6.3-jdk-11' }
+            agent { podman 'maven:3.6.3-jdk-11' }
             steps {
                 echo 'mvn package'
             }
