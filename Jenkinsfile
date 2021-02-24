@@ -3,7 +3,12 @@ pipeline {
 
     stages {
         stage('Build') {
-            agent { docker 'maven:3.6.3-jdk-11' }
+            agent {
+                docker {
+                    image 'maven:3.6.3-jdk-11'
+                    args '-v $HOME/.m2:/root/.m2'
+                }
+            }
             steps {
                 sh 'mvn clean compile'
             }
@@ -14,7 +19,12 @@ pipeline {
             }
         }
         stage('package') {
-            agent { docker 'maven:3.6.3-jdk-11' }
+            agent {
+                docker {
+                    image 'maven:3.6.3-jdk-11'
+                    args '-v $HOME/.m2:/root/.m2'
+                }
+            }
             steps {
                 sh 'mvn package'
             }
