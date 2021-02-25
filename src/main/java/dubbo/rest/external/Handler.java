@@ -19,6 +19,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -67,21 +68,21 @@ public class Handler {
     }
 
     private List<String> getParameterTypes(String interfaceName,String methodName, String version, String group, String application){
-        MetadataReport metadataReport = MetadataReportInstance.getMetadataReport();
-        String serviceDefinition = metadataReport.getServiceDefinition(
-                new MetadataIdentifier(
-                        interfaceName,
-                        version,
-                        group,
-                        PROVIDER_SIDE,
-                        application)
-        );
+        MetadataIdentifier metadataIdentifier = new MetadataIdentifier(
+                interfaceName,
+                version,
+                group,
+                PROVIDER_SIDE,
+                application);
+        MetadataReport metadataReport = MetadataReportInstance.getMetadataReport(metadataIdentifier.getIdentifierKey());
+        String serviceDefinition = metadataReport.getServiceDefinition(metadataIdentifier);
         List<String> parameterTypes = Optional.ofNullable(serviceDefinition)
                 .map(sdStr-> {
                     try {
-                        return mapper.readTree(sdStr);
+
+                        return mapper.readTree(new String(Base64.getDecoder().decode(sdStr)));
                     } catch (JsonProcessingException e) {
-                        logger.warn("serviceDefinition 解析错误 {}", e.getMessage(), e);
+                        logger.warn("serviceDefinition 解析错误 {}", sdStr, e);
                         return null;
                     }
                 })
