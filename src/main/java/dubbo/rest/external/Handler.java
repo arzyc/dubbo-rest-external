@@ -1,6 +1,5 @@
 package dubbo.rest.external;
 
-import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,13 +45,21 @@ public class Handler {
                     String group = request.queryParam("group").orElse("");
                     String version = request.queryParam("version").orElse("");
 
-                    Req req = JSON.parseObject(body, Req.class);
-                    String methodName = req.getMethodName();
+//                    Req req = JSON.parseObject(body, Req.class);
+//                    String methodName = req.getMethodName();
 
-                    Object genericInvokeResult = genericInvoke.genericCall(
+                    Req reqJson = null;
+                    try {
+                        reqJson = mapper.readValue(body, Req.class);
+                    } catch (JsonProcessingException e) {
+                        logger.info("body parser error: {}", body, e);
+                    }
+                    String methodName = reqJson.getMethodName();
+
+                            Object genericInvokeResult = genericInvoke.genericCall(
                                     interfaceName, group, version, methodName,
                                     Handler.this.getParameterTypes(interfaceName, methodName, version,group,application).toArray(new String[]{}),
-                                    req.getParamValues());
+                                    reqJson.getParamValues());
                     return genericInvokeResult;
 
                 }),
