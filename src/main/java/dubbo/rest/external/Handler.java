@@ -79,7 +79,6 @@ public class Handler {
         List<String> parameterTypes = Optional.ofNullable(serviceDefinition)
                 .map(sdStr-> {
                     try {
-
                         return mapper.readTree(new String(Base64.getDecoder().decode(sdStr)));
                     } catch (JsonProcessingException e) {
                         logger.warn("serviceDefinition 解析错误 {}", sdStr, e);

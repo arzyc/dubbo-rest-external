@@ -17,18 +17,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class DubboConfig {
-//    @Bean
-//    Registry getRegistry(@Value("${dubbo.registry.address}") String url) {
-////        URL url = URL.valueOf(registryAddress);
-////        if (StringUtils.isNotEmpty(group)) {
-////            url = url.addParameter(org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY, group);
-////        }
-//        RegistryFactory registryFactory = ExtensionLoader
-//                .getExtensionLoader(RegistryFactory.class)
-//                .getAdaptiveExtension();
-//        Registry registry = registryFactory.getRegistry(URL.valueOf(url));
-//        return registry;
-//    }
 
     @Bean(
             initMethod = "start",
@@ -50,10 +38,4 @@ public class DubboConfig {
         return bootstrap;
     }
 
-//    @Bean
-//    MetadataReport getMetadataReport(@Value("${dubbo.metadata-report.address}") String metadataReportURL) {
-//        MetadataReportInstance.init(URL.valueOf(metadataReportURL));
-//        MetadataReport metadataReport = MetadataReportInstance.getMetadataReport(true);
-//        return metadataReport;
-//    }
 }

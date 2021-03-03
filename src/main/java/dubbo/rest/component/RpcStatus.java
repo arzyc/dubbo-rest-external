@@ -1,7 +1,5 @@
 package dubbo.rest.component;
 
-import org.springframework.lang.Nullable;
-
 public enum RpcStatus {
     UNKNOWN_EXCEPTION(0,"UNKNOWN_EXCEPTION"),
     NETWORK_EXCEPTION(1,"NETWORK_EXCEPTION"),
